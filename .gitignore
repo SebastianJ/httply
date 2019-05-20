@@ -7,5 +7,10 @@
 /spec/reports/
 /tmp/
 
+/spec/data/
+
+/bin/.pry_history
+.pry_history
+
 # rspec failure tracking
 .rspec_status
