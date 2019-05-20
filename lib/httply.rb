@@ -35,5 +35,4 @@ module Httply
     end
     
   end
-  
 end
