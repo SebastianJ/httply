@@ -68,7 +68,7 @@ module Httply
     
     def setup(path, method: :get, headers: {}, options: {}, as: nil)
       client_options            =   options.fetch(:client, {})
-      follow_redirects          =   options.fetch(:follow_redirects, false)
+      follow_redirects          =   options.fetch(:follow_redirects, true)
       redirect_limit            =   options.fetch(:redirects_limit, 10)
       proxy                     =   determine_proxy(options.fetch(:proxy, nil))
       
