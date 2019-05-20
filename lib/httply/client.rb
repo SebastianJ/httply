@@ -45,7 +45,7 @@ module Httply
     end
     
     def request(path, method: :get, parameters: {}, data: {}, headers: {}, options: {}, as: nil)
-      connection                =   setup(path, headers: headers, options: options, as: as)
+      connection                =   setup(path, method: method, headers: headers, options: options, as: as)
   
       response                  =   case method
         when :get
@@ -66,7 +66,7 @@ module Httply
       return response
     end
     
-    def setup(path, headers: {}, options: {}, as: nil)
+    def setup(path, method: :get, headers: {}, options: {}, as: nil)
       client_options            =   options.fetch(:client, {})
       follow_redirects          =   options.fetch(:follow_redirects, false)
       redirect_limit            =   options.fetch(:redirects_limit, 10)
@@ -81,6 +81,8 @@ module Httply
         builder.options[:open_timeout]    =   options.fetch(:open_timeout, nil) if options.fetch(:open_timeout, nil)
         
         builder.headers         =   headers
+        
+        builder.request :url_encoded if [:post, :put, :patch, :delete].include?(method)
         
         builder.response :logger if self.configuration.verbose
         
