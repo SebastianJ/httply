@@ -5,28 +5,35 @@ require "agents"
 require "httply/version"
 require "httply/configuration"
 
+require "httply/middlewares/html"
+
+require "httply/proxies"
+require "httply/client"
+
 module Httply
   class Error < StandardError; end
   
   class << self
     attr_writer :configuration
-  end
-  
-  def self.configuration
-    @configuration ||= ::Httply::Configuration.new
-  end
+    
+    def configuration
+      @configuration ||= ::Httply::Configuration.new
+    end
 
-  def self.reset
-    @configuration = ::Httply::Configuration.new
-  end
+    def reset
+      @configuration = ::Httply::Configuration.new
+    end
 
-  def self.configure
-    yield(configuration)
+    def configure
+      yield(configuration)
+    end
+    
+    [:get, :head, :post, :put, :patch, :delete].each do |http_verb|
+      define_method(http_verb) do |path, args|
+        ::Httply::Client.new.send(http_verb, path, **args)
+      end
+    end
+    
   end
   
 end
-
-require "httply/middlewares/html"
-
-require "httply/proxies"
-require "httply/client"
