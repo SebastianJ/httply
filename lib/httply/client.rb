@@ -50,16 +50,16 @@ module Httply
       response                  =   case method
         when :get
           connection.get do |request|
-            request.parameters  =   parameters if parameters && !parameters.empty?
+            request.params      =   parameters if parameters && !parameters.empty?
           end
         when :head
           connection.head do |request|
-            request.parameters  =   parameters if parameters && !parameters.empty?
+            request.params      =   parameters if parameters && !parameters.empty?
           end
         when :post, :put, :patch, :delete
           connection.send(method) do |request|
             request.body        =   data if data && !data.empty?
-            request.parameters  =   parameters if parameters && !parameters.empty?
+            request.params      =   parameters if parameters && !parameters.empty?
           end
       end
       
