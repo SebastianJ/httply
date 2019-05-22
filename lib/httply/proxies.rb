@@ -49,7 +49,7 @@ module Httply
       
       if randomize && proxy_model_defined?
         proxy_object                =   ::Proxy.get_random_proxy(protocol: protocol, proxy_type: type)
-        proxy                       =   proxy_from_object(proxy_object)
+        proxy                       =   proxy_from_object(proxy_object, proxy)
       else
         if host && port
           proxy[:host]              =   host
