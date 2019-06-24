@@ -6,7 +6,7 @@ module Httply
     include ::Httply::Proxies
     
     def initialize(host: nil, configuration: ::Httply.configuration, memoize: false)
-      self.host             =   host
+      self.host             =   correct_host(host)
       self.configuration    =   configuration
       self.memoize          =   memoize
       self.connection       =   nil
@@ -113,6 +113,12 @@ module Httply
     
     def log(message)
       puts "[Httply::Client] - #{message}" if self.configuration.verbose
+    end
+    
+    def correct_host(host)
+      if !host.to_s.empty?
+        host                    =   host =~ /^http(s)?:\/\//i ? host : "https://#{host}"
+      end
     end
     
     def parse_host(url)
