@@ -119,6 +119,8 @@ module Httply
       if !host.to_s.empty?
         host                    =   host =~ /^http(s)?:\/\//i ? host : "https://#{host}"
       end
+      
+      return host
     end
     
     def parse_host(url)
