@@ -6,14 +6,14 @@ module Httply
     include ::Httply::Proxies
     
     def initialize(host: nil, configuration: ::Httply.configuration, memoize: false)
-      self.host             =   correct_host(host)
+      self.host             =   ::Httply::Utilities::Uri.correct_host(host)
       self.configuration    =   configuration
       self.memoize          =   memoize
       self.connection       =   nil
     end
     
-    def setup(host: host, headers: headers, options: options)
-      self.connection       =   configure(host: host, headers: headers, options: options)
+    def setup(host: nil, headers: {}, options: {})
+      self.connection     ||=   configure(host: host, headers: headers, options: options)
     end
     
     def get(path, parameters: {}, headers: {}, options: {})
@@ -41,16 +41,9 @@ module Httply
     end
     
     def request(path, method: :get, parameters: {}, data: {}, headers: {}, options: {})
-      host                      =   parse_host(path)
-      path                      =   to_path(path)
-      connection                =   nil
-      
-      if self.memoize
-        self.connection       ||=   configure(host: host, headers: headers, options: options)
-        connection              =   self.connection
-      else
-        connection              =   configure(host: host, headers: headers, options: options)
-      end
+      host                      =   !self.host.to_s.empty? ? self.host : ::Httply::Utilities::Uri.parse_host(path)
+      path                      =   ::Httply::Utilities::Uri.to_path(path)
+      connection                =   self.memoize ? setup(host: host, headers: headers, options: options) : configure(host: host, headers: headers, options: options)
   
       response                  =   case method
         when :get
@@ -113,35 +106,6 @@ module Httply
     
     def log(message)
       puts "[Httply::Client] - #{message}" if self.configuration.verbose
-    end
-    
-    def correct_host(host)
-      if !host.to_s.empty?
-        host                    =   host =~ /^http(s)?:\/\//i ? host : "https://#{host}"
-      end
-      
-      return host
-    end
-    
-    def parse_host(url)
-      host                      =   !self.host.to_s.empty? ? self.host : nil
-      
-      if host.to_s.empty? && url =~ /^http(s)?:\/\//
-        uri                     =   URI(url)
-        host                    =   "#{uri.scheme}://#{uri.host}"
-      end
-      
-      return host
-    end
-    
-    def to_path(path)
-      if path =~ /^http(s)?:\/\//
-        path                    =   URI(path).path
-      end
-      
-      path                      =   path =~ /^\// ? path : "/#{path}"
-      
-      return path
     end
     
   end

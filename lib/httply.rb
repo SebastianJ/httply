@@ -9,6 +9,8 @@ require "httply/configuration"
 
 require "httply/middlewares/html"
 
+require "httply/utilities/uri"
+
 require "httply/proxies"
 require "httply/client"
 
