@@ -2,6 +2,8 @@ require "faraday"
 require "faraday_middleware"
 require "agents"
 
+require "uri"
+
 require "httply/version"
 require "httply/configuration"
 

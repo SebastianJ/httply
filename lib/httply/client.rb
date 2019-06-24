@@ -1,63 +1,71 @@
 module Httply
   class Client
     attr_accessor :host, :configuration
+    attr_accessor :memoize, :connection
     
     include ::Httply::Proxies
     
-    def initialize(host: nil, configuration: ::Httply.configuration)
+    def initialize(host: nil, configuration: ::Httply.configuration, memoize: false)
       self.host             =   host
       self.configuration    =   configuration
+      self.memoize          =   memoize
+      self.connection       =   nil
     end
     
-    def to_uri(path)
-      path                  =   path.gsub(/^\//i, "")
-      
-      if path !~ /^http(s)?:\/\// && !self.host.to_s.empty?
-        host_part           =   self.host =~ /^http(s)?:\/\// ? self.host : "https://#{self.host}"
-        path                =   "#{host_part}/#{path}"
-      end
-      
-      return path
+    def setup(host: host, headers: headers, options: options)
+      self.connection       =   configure(host: host, headers: headers, options: options)
     end
     
-    def get(path, parameters: {}, headers: {}, options: {}, as: nil)
-      request path, method: :get, parameters: parameters, headers: headers, options: options, as: as
+    def get(path, parameters: {}, headers: {}, options: {})
+      request path, method: :get, parameters: parameters, headers: headers, options: options
     end
     
-    def head(path, parameters: {}, headers: {}, options: {}, as: nil)
-      request path, method: :head, parameters: parameters, headers: headers, options: options, as: as
+    def head(path, parameters: {}, headers: {}, options: {})
+      request path, method: :head, parameters: parameters, headers: headers, options: options
     end
 
-    def post(path, parameters: {}, data: {}, headers: {}, options: {}, as: nil)
-      request path, method: :post, parameters: parameters, data: data, headers: headers, options: options, as: as
+    def post(path, parameters: {}, data: {}, headers: {}, options: {})
+      request path, method: :post, parameters: parameters, data: data, headers: headers, options: options
     end
     
-    def put(path, parameters: {}, data: {}, headers: {}, options: {}, as: nil)
-      request path, method: :put, parameters: parameters, data: data, headers: headers, options: options, as: as
+    def put(path, parameters: {}, data: {}, headers: {}, options: {})
+      request path, method: :put, parameters: parameters, data: data, headers: headers, options: options
     end
     
-    def patch(path, parameters: {}, data: {}, headers: {}, options: {}, as: nil)
-      request path, method: :patch, parameters: parameters, data: data, headers: headers, options: options, as: as
+    def patch(path, parameters: {}, data: {}, headers: {}, options: {})
+      request path, method: :patch, parameters: parameters, data: data, headers: headers, options: options
     end
     
-    def delete(path, parameters: {}, data: {}, headers: {}, options: {}, as: nil)
-      request path, method: :delete, parameters: parameters, data: data, headers: headers, options: options, as: as
+    def delete(path, parameters: {}, data: {}, headers: {}, options: {})
+      request path, method: :delete, parameters: parameters, data: data, headers: headers, options: options
     end
     
-    def request(path, method: :get, parameters: {}, data: {}, headers: {}, options: {}, as: nil)
-      connection                =   setup(path, method: method, headers: headers, options: options, as: as)
+    def request(path, method: :get, parameters: {}, data: {}, headers: {}, options: {})
+      host                      =   parse_host(path)
+      path                      =   to_path(path)
+      connection                =   nil
+      
+      if self.memoize
+        self.connection       ||=   configure(host: host, headers: headers, options: options)
+        connection              =   self.connection
+      else
+        connection              =   configure(host: host, headers: headers, options: options)
+      end
   
       response                  =   case method
         when :get
           connection.get do |request|
+            request.url path
             request.params      =   parameters if parameters && !parameters.empty?
           end
         when :head
           connection.head do |request|
+            request.url path
             request.params      =   parameters if parameters && !parameters.empty?
           end
         when :post, :put, :patch, :delete
           connection.send(method) do |request|
+            request.url path
             request.body        =   data if data && !data.empty?
             request.params      =   parameters if parameters && !parameters.empty?
           end
@@ -66,41 +74,66 @@ module Httply
       return response
     end
     
-    def setup(path, method: :get, headers: {}, options: {}, as: nil)
+    def configure(host:, headers: {}, options: {})
       client_options            =   options.fetch(:client, {})
-      follow_redirects          =   options.fetch(:follow_redirects, true)
-      redirect_limit            =   options.fetch(:redirects_limit, 10)
+      
+      request_options           =   options.fetch(:request, {})
+      redirects                 =   request_options.fetch(:redirects, 10)
+      
       proxy                     =   determine_proxy(options.fetch(:proxy, nil))
       
-      url                       =   to_uri(path)
+      headers["User-Agent"]     =   headers.fetch("User-Agent", ::Agents.random_user_agent(options.fetch(:user_agent_device, :desktop)))
       
-      headers                   =   {"User-Agent" => ::Agents.random_user_agent(options.fetch(:user_agent_device, :desktop))}.merge(headers)
-      
-      connection                =   ::Faraday.new(url, client_options) do |builder|
+      connection                =   ::Faraday.new(host, client_options) do |builder|
         builder.options[:timeout]         =   options.fetch(:timeout, nil)      if options.fetch(:timeout, nil)
         builder.options[:open_timeout]    =   options.fetch(:open_timeout, nil) if options.fetch(:open_timeout, nil)
         
         builder.headers         =   headers
         
-        builder.request :url_encoded if [:post, :put, :patch, :delete].include?(method)
+        builder.request  :url_encoded if request_options.fetch(:url_encoded, false)
+        builder.request  :json        if request_options.fetch(:json, false)
         
-        builder.response :logger if self.configuration.verbose
+        builder.response :logger      if self.configuration.verbose
+        builder.response :xml,  content_type: /\bxml$/
+        builder.response :json, content_type: /\bjson$/
+        builder.use ::Httply::Middlewares::ParseHtml, content_type: /\btext\/html$/
         
-        builder.response :xml,  content_type: /\bxml$/  if as.eql?(:xml)
-        builder.response :json, content_type: /\bjson$/ if as.eql?(:json)
-        builder.use ::Httply::Middlewares::ParseHtml      if as.eql?(:html)
-        
-        builder.use ::FaradayMiddleware::FollowRedirects, limit: redirect_limit if follow_redirects && redirect_limit && redirect_limit > 0
+        builder.use ::FaradayMiddleware::FollowRedirects, limit: redirects if redirects && redirects > 0
         
         if proxy
           builder.proxy         =   generate_faraday_proxy(proxy)
-          puts "[Httply::Client] - Will use proxy: #{builder.proxy.inspect}" if self.configuration.verbose
+          log("Will use proxy: #{builder.proxy.inspect}")
         end
     
         builder.adapter self.configuration.faraday.fetch(:adapter, ::Faraday.default_adapter)
       end
       
       return connection
+    end
+    
+    def log(message)
+      puts "[Httply::Client] - #{message}" if self.configuration.verbose
+    end
+    
+    def parse_host(url)
+      host                      =   !self.host.to_s.empty? ? self.host : nil
+      
+      if host.to_s.empty? && url =~ /^http(s)?:\/\//
+        uri                     =   URI(url)
+        host                    =   "#{uri.scheme}://#{uri.host}"
+      end
+      
+      return host
+    end
+    
+    def to_path(path)
+      if path =~ /^http(s)?:\/\//
+        path                    =   URI(path).path
+      end
+      
+      path                      =   path =~ /^\// ? path : "/#{path}"
+      
+      return path
     end
     
   end
