@@ -2,7 +2,7 @@
 
 Httply is a lightweight wrapper around Faraday to support automatic randomization of proxies and user agents, amongst other things.
 
-Randomized proxy switching support is provided by the [proxied](https://github.com/SebastianJ/proxied) gem and randomized user agent is provided by the [agents](https://github.com/SebastianJ/agents) gem.
+Randomized proxy switching support is provided by the [proxied](https://github.com/SebastianJ/proxied) gem and randomized user agent support is provided by the [agents](https://github.com/SebastianJ/agents) gem.
 
 Randomized/automatic proxy switching is currently only supported in conjunction with the [proxied](https://github.com/SebastianJ/proxied) gem. Manual proxy support is obviously supported irregardless of using [proxied](https://github.com/SebastianJ/proxied) or not.
 
@@ -26,16 +26,25 @@ Or install it yourself as:
 
 ### Instance
 
-Httply can either be used as an instance, e.g:
+Httply can be used as an instance:
 
 ```ruby
 client    =   Httply::Client.new(host: "https://www.google.com")
 response  =   client.get("/webhp", parameters: {hl: :en})
 ```
 
+Httply can also memoize the Faraday connection (e.g. if you're invoking an API and using the same proxy and user agent for every request):
+
+```ruby
+client    =   Httply::Client.new(host: "https://www.google.com", memoize: true)
+response  =   client.get("/webhp", parameters: {hl: :en})
+```
+
+The difference is that for the first example user-agent and proxy will automatically be rotated (if not providing a specifc user-agent or proxy) on every request whereas in the second example the user-agent and proxy will be kept for every request.
+
 ### Class method
 
-Or directly as a class method:
+Httply can also be invoked on a class level:
 
 ```ruby
 response  =   Httply.get("https://www.google.com/webhp", parameters: {hl: :en})
@@ -45,10 +54,10 @@ response  =   Httply.get("https://www.google.com/webhp", parameters: {hl: :en})
 
 HTML parsing requires that Nokogiri has been required elsewhere and is accessible for Httply.
 
-You can also force parsing responses as HTML using Nokogiri:
+If Nokogiri is available "text/html" responses will automatically be parsed by Nokogiri.
 
 ```ruby
-response  =   Httply.get("https://www.google.com/webhp", parameters: {hl: :en}, as: :html)
+response  =   Httply.get("https://www.google.com/webhp", parameters: {hl: :en})
 ```
 
 response.body will now return a Nokogiri::HTML::Document
