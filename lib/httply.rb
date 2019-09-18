@@ -33,8 +33,9 @@ module Httply
     end
     
     [:get, :head, :post, :put, :patch, :delete].each do |http_verb|
-      define_method(http_verb) do |path, args|
-        ::Httply::Client.new.send(http_verb, path, **args)
+      define_method(http_verb) do |path, *args|
+        args    =   args.any? ? args.flatten.first : nil
+        ::Httply::Client.new.send(http_verb, path)
       end
     end
     

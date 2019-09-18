@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    httply (0.1.4)
+    httply (0.1.6)
       agents (>= 0.1.4)
       faraday (>= 0.15.4)
       faraday_middleware (>= 0.13.1)
@@ -20,7 +20,7 @@ GEM
     mini_portile2 (2.4.0)
     multi_xml (0.6.0)
     multipart-post (2.1.1)
-    nokogiri (1.10.3)
+    nokogiri (1.10.4)
       mini_portile2 (~> 2.4.0)
     pry (0.12.2)
       coderay (~> 1.1.0)
@@ -30,15 +30,15 @@ GEM
       rspec-core (~> 3.8.0)
       rspec-expectations (~> 3.8.0)
       rspec-mocks (~> 3.8.0)
-    rspec-core (3.8.0)
+    rspec-core (3.8.2)
       rspec-support (~> 3.8.0)
-    rspec-expectations (3.8.3)
+    rspec-expectations (3.8.4)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.8.0)
-    rspec-mocks (3.8.0)
+    rspec-mocks (3.8.1)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.8.0)
-    rspec-support (3.8.0)
+    rspec-support (3.8.2)
 
 PLATFORMS
   ruby
