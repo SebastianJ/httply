@@ -5,6 +5,7 @@ PATH
       agents (>= 0.1.4)
       faraday (>= 0.15.4)
       faraday_middleware (>= 0.13.1)
+      multi_xml (~> 0.6.0)
 
 GEM
   remote: https://rubygems.org/
@@ -46,7 +47,6 @@ PLATFORMS
 DEPENDENCIES
   bundler (~> 1.17)
   httply!
-  multi_xml (~> 0.6.0)
   nokogiri (~> 1.10)
   pry (~> 0.12.2)
   rake (~> 10.0)

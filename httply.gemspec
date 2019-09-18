@@ -26,6 +26,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "faraday",                ">= 0.15.4"  
   spec.add_dependency "faraday_middleware",     ">= 0.13.1"
   spec.add_dependency "agents",                 ">= 0.1.4"
+  spec.add_dependency "multi_xml",              "~> 0.6.0"
 
   spec.add_development_dependency "bundler",    "~> 1.17"
   spec.add_development_dependency "rake",       "~> 10.0"
@@ -34,5 +35,4 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "pry",        "~> 0.12.2"
   
   spec.add_development_dependency "nokogiri",   "~> 1.10"
-  spec.add_development_dependency "multi_xml",  "~> 0.6.0"
 end
