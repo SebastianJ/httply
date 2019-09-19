@@ -109,8 +109,8 @@ module Httply
         
         builder.use ::FaradayMiddleware::FollowRedirects, limit: redirects if redirects && redirects > 0
         
-        if proxy
-          builder.proxy         =   generate_faraday_proxy(proxy)
+        if proxy && !proxy.empty?
+          builder.proxy         =   proxy
           log("Will use proxy: #{builder.proxy.inspect}")
         end
     

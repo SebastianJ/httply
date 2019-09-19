@@ -19,6 +19,10 @@ module Httply
         elsif proxy_model_defined? && options.is_a?(::Proxy)
           proxy                     =   proxy_from_object(options, proxy)
         end
+        
+        if proxy && !proxy.empty?
+          proxy                     =   proxy.has_key?(:uri) ? proxy : generate_faraday_proxy(proxy)
+        end
       end
       
       return proxy
@@ -37,25 +41,28 @@ module Httply
     end
     
     def proxy_from_hash(options, proxy)
-      host                          =   options.fetch(:host, nil)
-      port                          =   options.fetch(:port, nil)
-      
-      username                      =   options.fetch(:username, nil)
-      password                      =   options.fetch(:password, nil)
-      
-      randomize                     =   options.fetch(:randomize, true)
+      randomize                     =   options.fetch(:randomize, false)
       type                          =   options.fetch(:type, :all)
-      protocol                      =   options.fetch(:protocol, :all)
+      protocol                      =   options.fetch(:protocol, :http)
       
       if randomize && proxy_model_defined?
         proxy_object                =   ::Proxy.get_random_proxy(protocol: protocol, proxy_type: type)
         proxy                       =   proxy_from_object(proxy_object, proxy)
       else
-        if host && port
-          proxy[:host]              =   host
-          proxy[:port]              =   port
+        uri                         =   options.fetch(:uri, nil)
+        
+        if uri.to_s.empty?
+          host                      =   options.fetch(:host, nil)
+          port                      =   options.fetch(:port, nil)
+      
+          username                  =   options.fetch(:username, nil)
+          password                  =   options.fetch(:password, nil)
           
-          proxy                     =   set_credentials(username, password, proxy)
+          if !host.to_s.empty? && !port.to_s.empty?
+            proxy[:host]            =   host
+            proxy[:port]            =   port
+            proxy                   =   set_credentials(username, password, proxy)
+          end
         end
       end
       
