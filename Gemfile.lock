@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    httply (0.1.6)
+    httply (0.1.7)
       agents (>= 0.1.4)
       faraday (>= 0.15.4)
       faraday_middleware (>= 0.13.1)

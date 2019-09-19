@@ -16,31 +16,31 @@ module Httply
       self.connection     ||=   configure(host: host, headers: headers, options: options)
     end
     
-    def get(path, parameters: {}, headers: {}, options: {})
-      request path, method: :get, parameters: parameters, headers: headers, options: options
+    def get(path, parameters: {}, headers: {}, options: {}, format: nil)
+      request path, method: :get, parameters: parameters, headers: headers, options: options, format: format
     end
     
-    def head(path, parameters: {}, headers: {}, options: {})
-      request path, method: :head, parameters: parameters, headers: headers, options: options
+    def head(path, parameters: {}, headers: {}, options: {}, format: nil)
+      request path, method: :head, parameters: parameters, headers: headers, options: options, format: format
     end
 
-    def post(path, parameters: {}, data: {}, headers: {}, options: {})
-      request path, method: :post, parameters: parameters, data: data, headers: headers, options: options
+    def post(path, parameters: {}, data: {}, headers: {}, options: {}, format: nil)
+      request path, method: :post, parameters: parameters, data: data, headers: headers, options: options, format: format
     end
     
-    def put(path, parameters: {}, data: {}, headers: {}, options: {})
-      request path, method: :put, parameters: parameters, data: data, headers: headers, options: options
+    def put(path, parameters: {}, data: {}, headers: {}, options: {}, format: nil)
+      request path, method: :put, parameters: parameters, data: data, headers: headers, options: options, format: format
     end
     
-    def patch(path, parameters: {}, data: {}, headers: {}, options: {})
-      request path, method: :patch, parameters: parameters, data: data, headers: headers, options: options
+    def patch(path, parameters: {}, data: {}, headers: {}, options: {}, format: nil)
+      request path, method: :patch, parameters: parameters, data: data, headers: headers, options: options, format: format
     end
     
-    def delete(path, parameters: {}, data: {}, headers: {}, options: {})
-      request path, method: :delete, parameters: parameters, data: data, headers: headers, options: options
+    def delete(path, parameters: {}, data: {}, headers: {}, options: {}, format: nil)
+      request path, method: :delete, parameters: parameters, data: data, headers: headers, options: options, format: format
     end
     
-    def request(path, method: :get, parameters: {}, data: {}, headers: {}, options: {})
+    def request(path, method: :get, parameters: {}, data: {}, headers: {}, options: {}, format: nil)
       host                      =   !self.host.to_s.empty? ? self.host : ::Httply::Utilities::Uri.parse_host(path)
       path                      =   ::Httply::Utilities::Uri.to_path(path)
       connection                =   self.memoize ? setup(host: host, headers: headers, options: options) : configure(host: host, headers: headers, options: options)
@@ -62,6 +62,22 @@ module Httply
             request.body        =   data if data && !data.empty?
             request.params      =   parameters if parameters && !parameters.empty?
           end
+      end
+      
+      response                  =   ::Httply::Response.new(response)
+      response                  =   force_format(response, format) unless format.to_s.empty?
+      
+      return response
+    end
+    
+    def force_format(response, format)
+      case format.to_sym
+        when :json
+          response.body         =   ::JSON.parse(response.body)
+        when :xml
+          response.body         =   ::MultiXml.parse(response.body)
+        when :html
+          response.body         =   ::Nokogiri::HTML(response.body, nil, "utf-8")
       end
       
       return response
@@ -87,8 +103,8 @@ module Httply
         builder.request  :json        if request_options.fetch(:json, false)
         
         builder.response :logger      if self.configuration.verbose
-        builder.response :xml,  content_type: /\bxml$/
-        builder.response :json, content_type: /\bjson$/
+        builder.response :xml,      content_type: /\bxml$/
+        builder.response :json,     content_type: /\bjson$/
         builder.use ::Httply::Middlewares::ParseHtml, content_type: /\btext\/html$/
         
         builder.use ::FaradayMiddleware::FollowRedirects, limit: redirects if redirects && redirects > 0

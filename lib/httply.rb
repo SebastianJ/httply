@@ -11,6 +11,7 @@ require "httply/middlewares/html"
 
 require "httply/utilities/uri"
 
+require "httply/response"
 require "httply/proxies"
 require "httply/client"
 
@@ -34,8 +35,8 @@ module Httply
     
     [:get, :head, :post, :put, :patch, :delete].each do |http_verb|
       define_method(http_verb) do |path, *args|
-        args    =   args.any? ? args.flatten.first : nil
-        ::Httply::Client.new.send(http_verb, path)
+        args    =   args.any? ? args.flatten.first : {}
+        ::Httply::Client.new.send(http_verb, path, args)
       end
     end
     
