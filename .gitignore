@@ -9,6 +9,8 @@
 
 /spec/data/
 
+.ruby-version
+
 /bin/.pry_history
 .pry_history
 
