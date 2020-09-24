@@ -64,7 +64,6 @@ module Httply
           end
       end
       
-      response                  =   ::Httply::Response.new(response)
       response                  =   force_format(response, format) unless format.to_s.empty?
       
       return response

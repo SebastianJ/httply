@@ -11,7 +11,6 @@ require "httply/middlewares/html"
 
 require "httply/utilities/uri"
 
-require "httply/response"
 require "httply/proxies"
 require "httply/client"
 
